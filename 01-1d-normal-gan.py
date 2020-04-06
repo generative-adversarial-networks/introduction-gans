@@ -19,7 +19,7 @@ from scipy.stats import norm
 
 # Real data set: Samples from a normal distribution given real_data_mean and real_data_sttdev
 real_data_mean = 4.0
-real_data_stddev = 0.4
+real_data_stddev = 0.2
 
 def get_real_sampler(mu, sigma):
     """
@@ -89,7 +89,7 @@ class Discriminator(nn.Module):
         return x
 
 
-def plot_data(real_mean, real_sigma, fake_data):
+def plot_data(real_mean, real_sigma, fake_data, epoch):
     x = np.linspace(1, 7, 100)
     mu, std = norm.fit(fake_data.tolist())
     fake_data_distribution = norm.pdf(x, mu, std)
@@ -98,10 +98,11 @@ def plot_data(real_mean, real_sigma, fake_data):
     plt.plot(x, fake_data_distribution, 'k', linewidth=2, label='Fake data')
     plt.plot(x, real_data_distribution, 'b', linewidth=2, label='Real data')
     title = "Fit results: mu = %.2f,  std = %.2f" % (mu, std)
-    plt.xlim(1,7)
-    plt.ylim(0, 1.5)
+    plt.xlim(2,6)
+    plt.ylim(0, 2.5)
     plt.title(title)
     plt.legend()
+    plt.savefig('01-1d-normal-gan-data-{}.png'.format(epoch))
     plt.show()
 
 
@@ -110,6 +111,7 @@ def plot_loss_evolution(discriminator_loss, generator_loss):
     if len(discriminator_loss) > 0: plt.plot(x, discriminator_loss, '-b', label='Discriminator loss')
     if len(generator_loss) > 0: plt.plot(x, generator_loss, ':r', label='Generator loss')
     plt.legend()
+    plt.savefig('01-1d-normal-gan-loss.png')
     plt.show()
 
 
@@ -172,7 +174,7 @@ def main():
 
     # Plot a little bit of trash
     generator_output = generator(noise_for_plot)
-    plot_data(real_data_mean, real_data_stddev, generator_output)
+    plot_data(real_data_mean, real_data_stddev, generator_output, -1)
 
     for epoch in range(epochs):
 
@@ -198,7 +200,6 @@ def main():
             # 1.3 Optimizing the discriminator weights
             discriminator_optimizer.step()
 
-            discriminator_loss_storage.append(discriminator_fake_loss + discriminator_real_loss)
 
             # 2. Train the generator
             generator.zero_grad()
@@ -212,16 +213,18 @@ def main():
             discriminator_loss_to_train_generator.backward()
             # 2.3 Optimizing the generator weights
             generator_optimizer.step()
-            generator_loss_storage.append(discriminator_loss_to_train_generator)
 
             batch_number += 1
 
+        discriminator_loss_storage.append(discriminator_fake_loss + discriminator_real_loss)
+        generator_loss_storage.append(discriminator_loss_to_train_generator)
         print('Epoch={}, Discriminator loss={}, Generator loss={}'.format(epoch, discriminator_loss_storage[-1],
                                                                           generator_loss_storage[-1]))
 
         if epoch % 1 == 0:
             generator_output = generator(noise_for_plot)
-            plot_data(real_data_mean, real_data_stddev, generator_output)
+            plot_data(real_data_mean, real_data_stddev, generator_output, epoch)
+
 
     plot_loss_evolution(discriminator_loss_storage, generator_loss_storage)
 
