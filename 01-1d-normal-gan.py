@@ -33,7 +33,7 @@ def get_real_sampler(mu, sigma):
 
 
 # Load samples from real data
-get_real_data = get_real_sampler(real_data_mean,real_data_stddev)
+get_real_data = get_real_sampler(real_data_mean, real_data_stddev)
 
 
 def read_latent_space(batch_size, latent_vector_size):
